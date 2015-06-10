@@ -1,0 +1,248 @@
+#include <iostream>
+#include <fstream>
+#include <list>
+#include <time.h>
+#include <map>
+#include <string>
+#include <ctime>
+using namespace std;
+fstream output;
+class Hashtable
+{
+private:
+	static const int m = 239;
+	int a[25];
+	struct htype
+	{
+		int count;
+		int key;
+		char s[25];
+		htype *next;
+		htype *prev;
+		htype()
+		{
+			count = 1;
+			next = NULL;
+			prev = NULL;
+		}
+	};
+	htype* Index[m];
+	
+public :
+	Hashtable()
+	{
+		srand(time(NULL));
+		for (int i = 0; i < 25; ++i)
+		{
+			a[i] = rand() % m;
+		}
+		for (int i = 0; i < m; ++i)
+		{
+			Index[i] = NULL;
+		}
+	}
+	void add (char *str)
+	{
+		
+		int i = 0;
+		while (str[i] != '\0')
+		{
+			++i;
+		}
+		
+		while (i < 25)
+		{
+			str[i] = '\0';
+			++i;
+		}
+		
+		int result = 0;
+		i = 0;
+		while ((str[i] != '\0') && (i < 25))
+		{
+			result += ((int) str[i])*a[i];
+			++i;
+		}
+		result %= m;
+		if (Index[result] == NULL)
+		{
+			htype* newhtype = new htype;
+			newhtype -> key = result;
+			for (int i = 0; i < 25; ++i)
+			{
+				(newhtype -> s)[i] = str[i];
+			}
+			newhtype -> next = NULL;
+			newhtype -> prev = NULL;
+			Index[result] = newhtype;
+		}
+		else
+		{
+			htype* newhtype = Index[result];
+			while (newhtype != NULL)
+			{
+				bool b = 1;
+				for (int i = 0; i < 25; ++i)
+				{
+					if (str[i] != (newhtype -> s)[i])
+						b = 0;
+				}
+				if (b)
+				{
+					++(newhtype -> count);
+					break;
+				}
+				else
+				{
+					if (newhtype -> next == NULL)
+					{
+						newhtype -> next = new htype;
+						(newhtype -> next) -> count = 1;
+						(newhtype -> next) -> key = result;
+						(newhtype -> next) -> prev = newhtype;
+						(newhtype -> next) -> next = NULL;
+						for (int i = 0; i < 25; ++i)
+						{
+							((newhtype -> next) -> s)[i] = str[i];
+						}
+						newhtype = NULL;
+						delete newhtype;
+						break;
+					}
+					else
+						newhtype = newhtype -> next;
+				}
+			}
+		}
+	}
+	void words()
+	{
+		for (int i = 0; i < m; ++i)
+		{
+			if (Index[i] != NULL)
+			{
+				htype* htype1 = Index[i];
+				while (htype1 != NULL)
+				{
+					output << htype1 ->s << " - " << htype1 -> count << endl;
+					htype1 = (htype1 -> next);
+				}
+			}
+		}
+
+	}
+	~Hashtable()
+	{
+		htype* htype1;
+		for (int i = 0; i < m; ++i)
+		{
+			if (Index[i] != NULL)
+			{
+			htype1 = Index[i];
+			while ((htype1 -> next) != NULL)
+			{
+				htype1 = htype1 -> next;
+				
+			}
+			
+			while (htype1 != Index[i])
+			{
+				
+				htype1 = htype1 -> prev;
+				htype* htype2 = htype1 -> next;
+				delete htype2;
+			}
+			delete Index[i];
+			}
+		}
+	}
+};
+int a[25];
+
+double duration(clock_t start, clock_t finish)
+{
+	return ((double) (finish - start));
+}
+int main()
+{
+	
+	Hashtable Table;
+	
+	char c;
+	int i = 0, j = 0;
+	char *str = new char[25];
+	output.open("output.txt", ios::out);
+	FILE* input = fopen("tail.txt", "r");
+	c = getc(input);
+	clock_t start, finish;
+	start = clock();
+	while (c != EOF)
+	{
+		
+		if ((c >= 'A') && (c <= 'Z') || (c >= 'a') && (c <= 'z'))
+		{
+			str[j] = c;
+			++j;
+		}
+		else
+		{
+			if (j != 0)
+			{
+				str[j] = '\0';
+				Table.add(str);
+				j = 0;
+				
+			}
+		}
+		c = getc(input);
+	}
+	finish = clock();
+	cout << duration(start, finish) << endl;
+	Table.words();
+	
+	output.close();
+	fclose(input);
+	FILE* input2 = fopen("input2.txt", "r");
+	fstream output2;
+	output2.open("output2.txt", ios :: out);
+	map<string, int> myMap;
+	map<string, int> :: iterator it;
+	char st1[25];
+	string st2;
+	c = getc(input2);
+	start = clock();
+	while (c != EOF)
+	{
+		if ((c >= 'A') && (c <= 'Z') || (c >= 'a') && (c <= 'z'))
+		{
+			st1[j] = c;
+			++j;
+		}
+		else
+		{
+			if (j != 0)
+			{
+				st1[j] = '\0';
+				st2 = st1;
+				
+				myMap[st2]++;
+				j = 0;
+				
+			}
+		}
+		c = getc(input2);
+		
+	}
+	finish = clock();
+	cout << duration(start, finish) << endl;
+	for (it = myMap.begin(); it != myMap.end(); ++it)
+	{
+		
+		output2 << it -> first << " - " << it -> second << endl;
+	}
+	fclose(input2);
+	output2.close();
+	
+	delete str;
+
+}
