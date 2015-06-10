@@ -18,10 +18,7 @@ public :
         String operator + (String s);
         String operator += (String s);
         char operator [] (int n);
-        friend ostream &operator<<(ostream &stream, const String &p);
-		friend ostream;
-
-		friend istream &operator>>(istream &stream, String &p);
+       
 		
 		String (const String &obj);
 		String &operator =(const String &obj);
